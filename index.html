@@ -1,71 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ParaWeb Ultimate</title>
+<title>ParaWeb X</title>
 
 <style>
-body{
+*{
   margin:0;
-  font-family:Arial;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Poppins, sans-serif;
+}
+
+body{
   background:#0a0a0f;
   color:white;
 }
 
-/* LOGIN UI */
-.login-container{
+/* ===== LOGIN ===== */
+#login{
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background:linear-gradient(135deg,#0a0a0f,#111);
+  background: linear-gradient(-45deg,#0a0a0f,#111,#0f2027);
+  background-size:400% 400%;
+  animation:bg 10s infinite;
+}
+
+@keyframes bg{
+  0%{background-position:0%}
+  50%{background-position:100%}
+  100%{background-position:0%}
 }
 
 .login-box{
-  width:320px;
+  width:340px;
   padding:25px;
   border-radius:20px;
   background:rgba(255,255,255,0.05);
   backdrop-filter:blur(20px);
   text-align:center;
+  box-shadow:0 0 40px rgba(0,255,255,0.2);
+}
+
+.login-box h2{
+  margin-bottom:15px;
+  background:linear-gradient(90deg,cyan,purple);
+  -webkit-background-clip:text;
+  color:transparent;
 }
 
 .login-box input{
   width:100%;
   padding:12px;
-  margin:6px 0;
+  margin:8px 0;
   border:none;
   border-radius:10px;
+  background:rgba(255,255,255,0.1);
+  color:white;
 }
 
 .login-btn{
   width:100%;
   padding:12px;
-  background:cyan;
   border:none;
   border-radius:10px;
+  background:cyan;
+  margin-top:10px;
+  cursor:pointer;
 }
 
 .social{
   display:flex;
-  gap:5px;
+  gap:8px;
+  margin-top:10px;
 }
 
 .social button{
   flex:1;
   padding:10px;
-  background:#222;
-  color:white;
   border:none;
   border-radius:10px;
+  background:#222;
+  color:white;
 }
 
-/* APP */
+/* ===== APP ===== */
 #app{display:none;height:100vh;}
 
-.main{display:flex;height:100%;}
+.main{
+  display:flex;
+  height:100%;
+}
 
-/* SIDEBAR */
+/* sidebar */
 .sidebar{
   width:200px;
   background:#111;
@@ -75,16 +104,20 @@ body{
 .sidebar button{
   width:100%;
   margin:5px 0;
+  padding:10px;
+  border:none;
+  background:#222;
+  color:white;
 }
 
-/* CONTENT */
+/* content */
 .content{
   flex:1;
   display:flex;
   flex-direction:column;
 }
 
-/* TABS */
+/* tabs */
 .tabs{
   display:flex;
   background:#111;
@@ -93,6 +126,7 @@ body{
 .tab{
   padding:10px;
   cursor:pointer;
+  border-right:1px solid #222;
 }
 
 .tab.active{
@@ -100,7 +134,7 @@ body{
   color:black;
 }
 
-/* BAR */
+/* bar */
 .bar{
   display:flex;
 }
@@ -108,9 +142,10 @@ body{
 .bar input{
   flex:1;
   padding:10px;
+  border:none;
 }
 
-/* FRAME */
+/* frame */
 iframe{
   flex:1;
   border:none;
@@ -121,21 +156,19 @@ iframe{
 <body>
 
 <!-- LOGIN -->
-<div id="login" class="login-container">
+<div id="login">
   <div class="login-box">
     <h2>ParaWeb</h2>
 
     <input id="user" placeholder="Username">
     <input id="pass" type="password" placeholder="Password">
 
-    <button class="login-btn" onclick="login()">Login</button>
-
-    <p>or</p>
+    <button class="login-btn" onclick="login()">Continue</button>
 
     <div class="social">
-      <button onclick="social('Google')">Google</button>
-      <button onclick="social('Apple')">Apple</button>
-      <button onclick="social('Facebook')">Facebook</button>
+      <button onclick="social()">Google</button>
+      <button onclick="social()">Apple</button>
+      <button onclick="social()">FB</button>
     </div>
   </div>
 </div>
@@ -144,7 +177,6 @@ iframe{
 <div id="app">
 <div class="main">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
   <h3>ParaWeb</h3>
   <button onclick="newTab()">+ New Tab</button>
@@ -155,7 +187,6 @@ iframe{
   <button onclick="logout()">Logout</button>
 </div>
 
-<!-- CONTENT -->
 <div class="content">
 
 <div class="tabs" id="tabs"></div>
@@ -177,16 +208,18 @@ function login(){
   if(user.value && pass.value){
     localStorage.setItem("logged","yes");
     start();
+  } else {
+    alert("Enter details");
   }
 }
 
-function social(type){
-  alert(type+" login needs backend");
+function social(){
+  alert("Real social login needs backend");
 }
 
 function start(){
-  login.style.display="none";
-  app.style.display="block";
+  document.getElementById("login").style.display="none";
+  document.getElementById("app").style.display="block";
 }
 
 if(localStorage.getItem("logged")=="yes") start();
@@ -203,11 +236,10 @@ function newTab(){
 }
 
 function renderTabs(){
-  tabsDiv.innerHTML="";
-  tabs.forEach((t,i)=>{
-    tabsDiv.innerHTML+=`<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">
-    Tab ${i+1}
-    </div>`;
+  let t=document.getElementById("tabs");
+  t.innerHTML="";
+  tabs.forEach((tab,i)=>{
+    t.innerHTML+=`<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">Tab ${i+1}</div>`;
   });
 }
 
@@ -217,20 +249,19 @@ function switchTab(i){
 }
 
 function load(){
-  frame.src=tabs[current];
+  document.getElementById("frame").src=tabs[current];
   renderTabs();
 }
 
 // SEARCH
 function go(){
   let v=url.value;
-  let link=v.startsWith("http")?v:"https://duckduckgo.com/?q="+v;
+  let link = v.startsWith("http") ? v : "https://duckduckgo.com/?q="+v;
   tabs[current]=link;
   saveHistory(v);
   load();
 }
 
-// HOME
 function goHome(){
   tabs[current]="https://duckduckgo.com";
   load();
@@ -270,7 +301,7 @@ function logout(){
 // ENTER KEY
 document.addEventListener("keydown",e=>{
   if(e.key==="Enter"){
-    if(app.style.display==="none"){
+    if(document.getElementById("app").style.display==="none"){
       login();
     } else {
       go();
@@ -279,8 +310,6 @@ document.addEventListener("keydown",e=>{
 });
 
 // INIT
-const tabsDiv=document.getElementById("tabs");
-const frame=document.getElementById("frame");
 newTab();
 </script>
 
