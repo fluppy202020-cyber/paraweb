@@ -4,129 +4,109 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ParaWeb X</title>
 
-<style>
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Poppins, sans-serif;
-}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
 
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
+
+/* ===== BACKGROUND ===== */
 body{
   background:#0a0a0f;
   color:white;
+  overflow:hidden;
 }
 
-/* ===== LOGIN ===== */
+/* PARTICLES */
+canvas{
+  position:fixed;
+  width:100%;
+  height:100%;
+  z-index:-1;
+}
+
+/* ===== LOGIN (LIQUID GLASS) ===== */
 #login{
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  background: linear-gradient(-45deg,#0a0a0f,#111,#0f2027);
-  background-size:400% 400%;
-  animation:bg 10s infinite;
-}
-
-@keyframes bg{
-  0%{background-position:0%}
-  50%{background-position:100%}
-  100%{background-position:0%}
 }
 
 .login-box{
   width:340px;
-  padding:25px;
-  border-radius:20px;
+  padding:30px;
+  border-radius:25px;
   background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(20px);
+  backdrop-filter:blur(30px);
+  border:1px solid rgba(255,255,255,0.1);
+  box-shadow:0 0 80px rgba(0,255,255,0.2);
   text-align:center;
-  box-shadow:0 0 40px rgba(0,255,255,0.2);
+  animation:fade .6s ease;
+}
+
+@keyframes fade{
+  from{opacity:0;transform:translateY(20px);}
+  to{opacity:1;}
 }
 
 .login-box h2{
-  margin-bottom:15px;
+  margin-bottom:20px;
   background:linear-gradient(90deg,cyan,purple);
   -webkit-background-clip:text;
   color:transparent;
 }
 
-.login-box input{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  border:none;
-  border-radius:10px;
-  background:rgba(255,255,255,0.1);
-  color:white;
-}
-
-.login-btn{
+.login-box button{
   width:100%;
   padding:12px;
   border:none;
-  border-radius:10px;
-  background:cyan;
+  border-radius:12px;
   margin-top:10px;
   cursor:pointer;
+  transition:.3s;
 }
 
-.social{
-  display:flex;
-  gap:8px;
-  margin-top:10px;
+.login-box button:hover{
+  transform:scale(1.05);
 }
 
-.social button{
-  flex:1;
-  padding:10px;
-  border:none;
-  border-radius:10px;
-  background:#222;
-  color:white;
-}
+.google{background:white;color:black;}
+.guest{background:cyan;}
 
 /* ===== APP ===== */
 #app{display:none;height:100vh;}
 
-.main{
+/* top bar */
+.topbar{
   display:flex;
-  height:100%;
-}
-
-/* sidebar */
-.sidebar{
-  width:200px;
-  background:#111;
+  gap:10px;
   padding:10px;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(10px);
 }
 
-.sidebar button{
-  width:100%;
-  margin:5px 0;
+.topbar input{
+  flex:1;
   padding:10px;
   border:none;
-  background:#222;
-  color:white;
-}
-
-/* content */
-.content{
-  flex:1;
-  display:flex;
-  flex-direction:column;
+  border-radius:10px;
 }
 
 /* tabs */
 .tabs{
   display:flex;
+  gap:5px;
+  padding:5px;
   background:#111;
+  overflow-x:auto;
 }
 
 .tab{
-  padding:10px;
+  padding:8px 15px;
+  background:#222;
+  border-radius:10px;
   cursor:pointer;
-  border-right:1px solid #222;
+  transition:.3s;
 }
 
 .tab.active{
@@ -134,20 +114,14 @@ body{
   color:black;
 }
 
-/* bar */
-.bar{
-  display:flex;
+.tab:hover{
+  transform:translateY(-2px);
 }
 
-.bar input{
-  flex:1;
-  padding:10px;
-  border:none;
-}
-
-/* frame */
+/* iframe */
 iframe{
-  flex:1;
+  width:100%;
+  height:100%;
   border:none;
 }
 </style>
@@ -155,74 +129,73 @@ iframe{
 
 <body>
 
+<canvas id="bg"></canvas>
+
 <!-- LOGIN -->
 <div id="login">
   <div class="login-box">
     <h2>ParaWeb</h2>
-
-    <input id="user" placeholder="Username">
-    <input id="pass" type="password" placeholder="Password">
-
-    <button class="login-btn" onclick="login()">Continue</button>
-
-    <div class="social">
-      <button onclick="social()">Google</button>
-      <button onclick="social()">Apple</button>
-      <button onclick="social()">FB</button>
-    </div>
+    <button class="google" onclick="googleLogin()">Continue with Google</button>
+    <button class="guest" onclick="guestLogin()">Continue as Guest</button>
   </div>
 </div>
 
 <!-- APP -->
 <div id="app">
-<div class="main">
 
-<div class="sidebar">
-  <h3>ParaWeb</h3>
-  <button onclick="newTab()">+ New Tab</button>
-  <button onclick="goHome()">Home</button>
-  <button onclick="addBookmark()">Bookmark</button>
-  <button onclick="showBookmarks()">Bookmarks</button>
-  <button onclick="showHistory()">History</button>
-  <button onclick="logout()">Logout</button>
-</div>
+  <div class="tabs" id="tabs"></div>
 
-<div class="content">
+  <div class="topbar">
+    <input id="url" placeholder="Search or URL">
+    <button onclick="go()">Go</button>
+    <button onclick="newTab()">+</button>
+    <button onclick="logout()">Logout</button>
+  </div>
 
-<div class="tabs" id="tabs"></div>
-
-<div class="bar">
-  <input id="url" placeholder="Search or URL">
-  <button onclick="go()">Go</button>
-</div>
-
-<iframe id="frame"></iframe>
+  <iframe id="frame"></iframe>
 
 </div>
-</div>
-</div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <script>
+// 🔴 PASTE YOUR FIREBASE CONFIG HERE
+const firebaseConfig = {
+  apiKey: "PASTE",
+  authDomain: "PASTE",
+  projectId: "PASTE",
+  appId: "PASTE"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+
 // LOGIN
-function login(){
-  if(user.value && pass.value){
-    localStorage.setItem("logged","yes");
-    start();
-  } else {
-    alert("Enter details");
-  }
+function googleLogin(){
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider);
 }
 
-function social(){
-  alert("Real social login needs backend");
+function guestLogin(){
+  startApp();
 }
 
-function start(){
-  document.getElementById("login").style.display="none";
-  document.getElementById("app").style.display="block";
+auth.onAuthStateChanged(user=>{
+  if(user) startApp();
+});
+
+function startApp(){
+  login.style.display="none";
+  app.style.display="block";
 }
 
-if(localStorage.getItem("logged")=="yes") start();
+// LOGOUT
+function logout(){
+  auth.signOut();
+  location.reload();
+}
 
 // TABS
 let tabs=[];
@@ -236,10 +209,9 @@ function newTab(){
 }
 
 function renderTabs(){
-  let t=document.getElementById("tabs");
-  t.innerHTML="";
-  tabs.forEach((tab,i)=>{
-    t.innerHTML+=`<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">Tab ${i+1}</div>`;
+  tabsDiv.innerHTML="";
+  tabs.forEach((t,i)=>{
+    tabsDiv.innerHTML+=`<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">Tab ${i+1}</div>`;
   });
 }
 
@@ -249,68 +221,52 @@ function switchTab(i){
 }
 
 function load(){
-  document.getElementById("frame").src=tabs[current];
+  frame.src=tabs[current];
   renderTabs();
 }
 
 // SEARCH
 function go(){
-  let v=url.value;
+  let v=url.value.trim();
   let link = v.startsWith("http") ? v : "https://duckduckgo.com/?q="+v;
   tabs[current]=link;
-  saveHistory(v);
   load();
-}
-
-function goHome(){
-  tabs[current]="https://duckduckgo.com";
-  load();
-}
-
-// BOOKMARKS
-let bookmarks=JSON.parse(localStorage.getItem("bookmarks")||"[]");
-
-function addBookmark(){
-  bookmarks.push(frame.src);
-  localStorage.setItem("bookmarks",JSON.stringify(bookmarks));
-  alert("Saved");
-}
-
-function showBookmarks(){
-  alert(bookmarks.join("\n"));
-}
-
-// HISTORY
-let historyList=JSON.parse(localStorage.getItem("history")||"[]");
-
-function saveHistory(q){
-  historyList.unshift(q);
-  localStorage.setItem("history",JSON.stringify(historyList));
-}
-
-function showHistory(){
-  alert(historyList.join("\n"));
-}
-
-// LOGOUT
-function logout(){
-  localStorage.clear();
-  location.reload();
 }
 
 // ENTER KEY
-document.addEventListener("keydown",e=>{
-  if(e.key==="Enter"){
-    if(document.getElementById("app").style.display==="none"){
-      login();
-    } else {
-      go();
-    }
-  }
+url.addEventListener("keydown",e=>{
+  if(e.key==="Enter") go();
 });
 
 // INIT
+const tabsDiv=document.getElementById("tabs");
+const frame=document.getElementById("frame");
 newTab();
+
+// PARTICLES
+const c=document.getElementById("bg");
+const ctx=c.getContext("2d");
+c.width=innerWidth;
+c.height=innerHeight;
+
+let p=[];
+for(let i=0;i<60;i++){
+  p.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:Math.random()-0.5,vy:Math.random()-0.5});
+}
+
+function draw(){
+  ctx.clearRect(0,0,c.width,c.height);
+  p.forEach(a=>{
+    a.x+=a.vx;
+    a.y+=a.vy;
+    ctx.beginPath();
+    ctx.arc(a.x,a.y,2,0,Math.PI*2);
+    ctx.fillStyle="white";
+    ctx.fill();
+  });
+  requestAnimationFrame(draw);
+}
+draw();
 </script>
 
 </body>
