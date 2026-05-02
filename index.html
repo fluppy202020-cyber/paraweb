@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ParaWeb X</title>
+<title>ParaWeb Ultimate</title>
 
 <style>
 body{
@@ -12,23 +12,58 @@ body{
   color:white;
 }
 
-/* LOGIN */
-#login{
+/* LOGIN UI */
+.login-container{
   height:100vh;
   display:flex;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
+  background:linear-gradient(135deg,#0a0a0f,#111);
+}
+
+.login-box{
+  width:320px;
+  padding:25px;
+  border-radius:20px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  text-align:center;
+}
+
+.login-box input{
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border:none;
+  border-radius:10px;
+}
+
+.login-btn{
+  width:100%;
+  padding:12px;
+  background:cyan;
+  border:none;
+  border-radius:10px;
+}
+
+.social{
+  display:flex;
+  gap:5px;
+}
+
+.social button{
+  flex:1;
+  padding:10px;
+  background:#222;
+  color:white;
+  border:none;
+  border-radius:10px;
 }
 
 /* APP */
-#app{display:none; height:100vh;}
+#app{display:none;height:100vh;}
 
-/* LAYOUT */
-.main{
-  display:flex;
-  height:100%;
-}
+.main{display:flex;height:100%;}
 
 /* SIDEBAR */
 .sidebar{
@@ -58,7 +93,6 @@ body{
 .tab{
   padding:10px;
   cursor:pointer;
-  border-right:1px solid #222;
 }
 
 .tab.active{
@@ -87,45 +121,54 @@ iframe{
 <body>
 
 <!-- LOGIN -->
-<div id="login">
-  <h2>ParaWeb Login</h2>
-  <input id="user" placeholder="Username">
-  <input id="pass" type="password" placeholder="Password">
-  <button onclick="login()">Enter</button>
+<div id="login" class="login-container">
+  <div class="login-box">
+    <h2>ParaWeb</h2>
+
+    <input id="user" placeholder="Username">
+    <input id="pass" type="password" placeholder="Password">
+
+    <button class="login-btn" onclick="login()">Login</button>
+
+    <p>or</p>
+
+    <div class="social">
+      <button onclick="social('Google')">Google</button>
+      <button onclick="social('Apple')">Apple</button>
+      <button onclick="social('Facebook')">Facebook</button>
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
 <div id="app">
-  <div class="main">
+<div class="main">
 
-    <!-- SIDEBAR -->
-    <div class="sidebar">
-      <h3>ParaWeb</h3>
-      <button onclick="newTab()">+ New Tab</button>
-      <button onclick="goHome()">🏠 Home</button>
-      <button onclick="showBookmarks()">⭐ Bookmarks</button>
-      <button onclick="showHistory()">🕘 History</button>
-      <button onclick="logout()">Logout</button>
-    </div>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h3>ParaWeb</h3>
+  <button onclick="newTab()">+ New Tab</button>
+  <button onclick="goHome()">Home</button>
+  <button onclick="addBookmark()">Bookmark</button>
+  <button onclick="showBookmarks()">Bookmarks</button>
+  <button onclick="showHistory()">History</button>
+  <button onclick="logout()">Logout</button>
+</div>
 
-    <!-- CONTENT -->
-    <div class="content">
+<!-- CONTENT -->
+<div class="content">
 
-      <!-- TABS -->
-      <div class="tabs" id="tabs"></div>
+<div class="tabs" id="tabs"></div>
 
-      <!-- SEARCH BAR -->
-      <div class="bar">
-        <input id="url" placeholder="Search or enter URL">
-        <button onclick="go()">Go</button>
-      </div>
+<div class="bar">
+  <input id="url" placeholder="Search or URL">
+  <button onclick="go()">Go</button>
+</div>
 
-      <!-- FRAME -->
-      <iframe id="frame"></iframe>
+<iframe id="frame"></iframe>
 
-    </div>
-
-  </div>
+</div>
+</div>
 </div>
 
 <script>
@@ -135,6 +178,10 @@ function login(){
     localStorage.setItem("logged","yes");
     start();
   }
+}
+
+function social(type){
+  alert(type+" login needs backend");
 }
 
 function start(){
@@ -150,19 +197,16 @@ let current=0;
 
 function newTab(){
   tabs.push("https://duckduckgo.com");
-  current = tabs.length-1;
+  current=tabs.length-1;
   renderTabs();
   load();
 }
 
 function renderTabs(){
-  let t=document.getElementById("tabs");
-  t.innerHTML="";
-
-  tabs.forEach((tab,i)=>{
-    t.innerHTML += `<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">
+  tabsDiv.innerHTML="";
+  tabs.forEach((t,i)=>{
+    tabsDiv.innerHTML+=`<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">
     Tab ${i+1}
-    <span onclick="closeTab(${i})">❌</span>
     </div>`;
   });
 }
@@ -172,26 +216,16 @@ function switchTab(i){
   load();
 }
 
-function closeTab(i){
-  tabs.splice(i,1);
-  current=0;
-  renderTabs();
-  load();
-}
-
-// LOAD PAGE
 function load(){
-  if(!tabs[current]) return;
-  frame.src = tabs[current];
+  frame.src=tabs[current];
   renderTabs();
 }
 
-// GO / SEARCH
+// SEARCH
 function go(){
   let v=url.value;
-  let final = v.startsWith("http") ? v : "https://duckduckgo.com/?q="+v;
-
-  tabs[current]=final;
+  let link=v.startsWith("http")?v:"https://duckduckgo.com/?q="+v;
+  tabs[current]=link;
   saveHistory(v);
   load();
 }
@@ -203,14 +237,20 @@ function goHome(){
 }
 
 // BOOKMARKS
-let bookmarks = JSON.parse(localStorage.getItem("bookmarks")||"[]");
+let bookmarks=JSON.parse(localStorage.getItem("bookmarks")||"[]");
+
+function addBookmark(){
+  bookmarks.push(frame.src);
+  localStorage.setItem("bookmarks",JSON.stringify(bookmarks));
+  alert("Saved");
+}
 
 function showBookmarks(){
   alert(bookmarks.join("\n"));
 }
 
 // HISTORY
-let historyList = JSON.parse(localStorage.getItem("history")||"[]");
+let historyList=JSON.parse(localStorage.getItem("history")||"[]");
 
 function saveHistory(q){
   historyList.unshift(q);
@@ -227,13 +267,21 @@ function logout(){
   location.reload();
 }
 
-// INIT
-newTab();
-
 // ENTER KEY
-url.addEventListener("keydown",e=>{
-  if(e.key==="Enter") go();
+document.addEventListener("keydown",e=>{
+  if(e.key==="Enter"){
+    if(app.style.display==="none"){
+      login();
+    } else {
+      go();
+    }
+  }
 });
+
+// INIT
+const tabsDiv=document.getElementById("tabs");
+const frame=document.getElementById("frame");
+newTab();
 </script>
 
 </body>
