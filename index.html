@@ -1,132 +1,240 @@
-/* =========================
-   ADVANCED FEATURES UPGRADE
-========================= */
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ParaWeb X</title>
 
-// history
-let historyList = JSON.parse(localStorage.getItem("history") || "[]");
+<style>
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0a0a0f;
+  color:white;
+}
+
+/* LOGIN */
+#login{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+}
+
+/* APP */
+#app{display:none; height:100vh;}
+
+/* LAYOUT */
+.main{
+  display:flex;
+  height:100%;
+}
+
+/* SIDEBAR */
+.sidebar{
+  width:200px;
+  background:#111;
+  padding:10px;
+}
+
+.sidebar button{
+  width:100%;
+  margin:5px 0;
+}
+
+/* CONTENT */
+.content{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+}
+
+/* TABS */
+.tabs{
+  display:flex;
+  background:#111;
+}
+
+.tab{
+  padding:10px;
+  cursor:pointer;
+  border-right:1px solid #222;
+}
+
+.tab.active{
+  background:cyan;
+  color:black;
+}
+
+/* BAR */
+.bar{
+  display:flex;
+}
+
+.bar input{
+  flex:1;
+  padding:10px;
+}
+
+/* FRAME */
+iframe{
+  flex:1;
+  border:none;
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <h2>ParaWeb Login</h2>
+  <input id="user" placeholder="Username">
+  <input id="pass" type="password" placeholder="Password">
+  <button onclick="login()">Enter</button>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="main">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <h3>ParaWeb</h3>
+      <button onclick="newTab()">+ New Tab</button>
+      <button onclick="goHome()">🏠 Home</button>
+      <button onclick="showBookmarks()">⭐ Bookmarks</button>
+      <button onclick="showHistory()">🕘 History</button>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <!-- TABS -->
+      <div class="tabs" id="tabs"></div>
+
+      <!-- SEARCH BAR -->
+      <div class="bar">
+        <input id="url" placeholder="Search or enter URL">
+        <button onclick="go()">Go</button>
+      </div>
+
+      <!-- FRAME -->
+      <iframe id="frame"></iframe>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+// LOGIN
+function login(){
+  if(user.value && pass.value){
+    localStorage.setItem("logged","yes");
+    start();
+  }
+}
+
+function start(){
+  login.style.display="none";
+  app.style.display="block";
+}
+
+if(localStorage.getItem("logged")=="yes") start();
+
+// TABS
+let tabs=[];
+let current=0;
+
+function newTab(){
+  tabs.push("https://duckduckgo.com");
+  current = tabs.length-1;
+  renderTabs();
+  load();
+}
+
+function renderTabs(){
+  let t=document.getElementById("tabs");
+  t.innerHTML="";
+
+  tabs.forEach((tab,i)=>{
+    t.innerHTML += `<div class="tab ${i==current?'active':''}" onclick="switchTab(${i})">
+    Tab ${i+1}
+    <span onclick="closeTab(${i})">❌</span>
+    </div>`;
+  });
+}
+
+function switchTab(i){
+  current=i;
+  load();
+}
+
+function closeTab(i){
+  tabs.splice(i,1);
+  current=0;
+  renderTabs();
+  load();
+}
+
+// LOAD PAGE
+function load(){
+  if(!tabs[current]) return;
+  frame.src = tabs[current];
+  renderTabs();
+}
+
+// GO / SEARCH
+function go(){
+  let v=url.value;
+  let final = v.startsWith("http") ? v : "https://duckduckgo.com/?q="+v;
+
+  tabs[current]=final;
+  saveHistory(v);
+  load();
+}
+
+// HOME
+function goHome(){
+  tabs[current]="https://duckduckgo.com";
+  load();
+}
+
+// BOOKMARKS
+let bookmarks = JSON.parse(localStorage.getItem("bookmarks")||"[]");
+
+function showBookmarks(){
+  alert(bookmarks.join("\n"));
+}
+
+// HISTORY
+let historyList = JSON.parse(localStorage.getItem("history")||"[]");
 
 function saveHistory(q){
   historyList.unshift(q);
-  historyList = historyList.slice(0,10);
-  localStorage.setItem("history", JSON.stringify(historyList));
+  localStorage.setItem("history",JSON.stringify(historyList));
 }
 
 function showHistory(){
-  console.log("Recent:", historyList);
+  alert(historyList.join("\n"));
 }
 
-// enter key
-document.getElementById("search").addEventListener("keydown", e=>{
-  if(e.key==="Enter") search();
-});
-
-// loading effect
-function showLoading(){
-  document.body.style.cursor="wait";
-}
-function hideLoading(){
-  document.body.style.cursor="default";
-}
-
-// improved search
-function search(){
-  let q=document.getElementById("search").value;
-  if(!q) return;
-
-  saveHistory(q);
-  showLoading();
-
-  let frame=document.getElementById("frame");
-
-  try{
-    frame.src="https://duckduckgo.com/?q="+q;
-    frame.style.display="block";
-  }catch{
-    alert("Search failed, opening new tab");
-    window.open("https://duckduckgo.com/?q="+q);
-  }
-
-  setTimeout(hideLoading,1000);
-}
-
-// logout
+// LOGOUT
 function logout(){
-  localStorage.removeItem("logged");
+  localStorage.clear();
   location.reload();
 }
 
-// username display
-let username = localStorage.getItem("user") || "User";
-console.log("Welcome", username);
+// INIT
+newTab();
 
-// session timeout (5 min)
-setTimeout(()=>{
-  logout();
-  alert("Session expired");
-}, 300000);
+// ENTER KEY
+url.addEventListener("keydown",e=>{
+  if(e.key==="Enter") go();
+});
+</script>
 
-// bookmarks
-let bookmarks = JSON.parse(localStorage.getItem("bookmarks")||"[]");
-
-function addBookmark(){
-  let url=document.getElementById("frame").src;
-  bookmarks.push(url);
-  localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
-  alert("Bookmarked!");
-}
-
-function showBookmarks(){
-  console.log(bookmarks);
-}
-
-// new tab toggle
-let newTab=false;
-function toggleNewTab(){
-  newTab=!newTab;
-}
-
-// updated search behavior
-function search(){
-  let q=document.getElementById("search").value;
-  let url="https://duckduckgo.com/?q="+q;
-
-  if(newTab){
-    window.open(url);
-  } else {
-    document.getElementById("frame").src=url;
-    document.getElementById("frame").style.display="block";
-  }
-}
-
-// UI controls
-function setRadius(v){
-  document.querySelector(".search-box").style.borderRadius = v+"px";
-}
-
-function setBlur(v){
-  document.querySelector(".search-box").style.backdropFilter = `blur(${v}px)`;
-}
-
-function setOpacity(v){
-  document.querySelector(".search-box").style.background = `rgba(255,255,255,${v})`;
-}
-
-// animation toggle
-let animations=true;
-function toggleAnimations(){
-  animations=!animations;
-  document.body.style.transition = animations?"all .3s":"none";
-}
-
-// particles reduce
-function lowPower(){
-  p.length = 10;
-}
-
-// direct URL open
-function openURL(){
-  let url=document.getElementById("search").value;
-  if(url.startsWith("http")){
-    window.open(url);
-  }
-}
+</body>
+</html>
