@@ -1,17 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ParaWeb X</title>
-
+<title>ParaWeb</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Poppins}
 
-/* ===== BACKGROUND ===== */
 body{
-  background:#0a0a0f;
+  background:#05070d;
   color:white;
   overflow:hidden;
 }
@@ -24,7 +22,7 @@ canvas{
   z-index:-1;
 }
 
-/* ===== LOGIN (LIQUID GLASS) ===== */
+/* ===== LOGIN ===== */
 #login{
   height:100vh;
   display:flex;
@@ -37,20 +35,16 @@ canvas{
   padding:30px;
   border-radius:25px;
   background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(30px);
+  backdrop-filter:blur(40px);
   border:1px solid rgba(255,255,255,0.1);
   box-shadow:0 0 80px rgba(0,255,255,0.2);
   text-align:center;
   animation:fade .6s ease;
 }
 
-@keyframes fade{
-  from{opacity:0;transform:translateY(20px);}
-  to{opacity:1;}
-}
-
 .login-box h2{
   margin-bottom:20px;
+  font-size:28px;
   background:linear-gradient(90deg,cyan,purple);
   -webkit-background-clip:text;
   color:transparent;
@@ -70,39 +64,70 @@ canvas{
   transform:scale(1.05);
 }
 
-.google{background:white;color:black;}
-.guest{background:cyan;}
+.google{background:white;color:black}
+.guest{background:cyan}
 
-/* ===== APP ===== */
-#app{display:none;height:100vh;}
-
-/* top bar */
-.topbar{
+/* ===== HOME ===== */
+#home{
+  display:none;
+  height:100vh;
   display:flex;
-  gap:10px;
-  padding:10px;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(10px);
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
 }
 
-.topbar input{
+.logo{
+  font-size:50px;
+  font-weight:600;
+  background:linear-gradient(90deg,cyan,purple);
+  -webkit-background-clip:text;
+  color:transparent;
+  margin-bottom:20px;
+}
+
+/* search */
+.search-box{
+  width:90%;
+  max-width:500px;
+  background:rgba(255,255,255,0.05);
+  backdrop-filter:blur(20px);
+  border-radius:20px;
+  padding:10px;
+  display:flex;
+  box-shadow:0 0 30px rgba(0,255,255,0.1);
+}
+
+.search-box input{
   flex:1;
   padding:10px;
   border:none;
+  outline:none;
+  background:none;
+  color:white;
+}
+
+.search-box button{
+  background:cyan;
+  border:none;
+  padding:10px 15px;
   border-radius:10px;
+  cursor:pointer;
 }
 
 /* tabs */
 .tabs{
+  position:fixed;
+  top:0;
+  width:100%;
   display:flex;
   gap:5px;
   padding:5px;
-  background:#111;
-  overflow-x:auto;
+  background:rgba(0,0,0,0.6);
 }
 
 .tab{
-  padding:8px 15px;
+  padding:8px 12px;
   background:#222;
   border-radius:10px;
   cursor:pointer;
@@ -114,15 +139,13 @@ canvas{
   color:black;
 }
 
-.tab:hover{
-  transform:translateY(-2px);
-}
-
-/* iframe */
 iframe{
+  position:fixed;
+  top:40px;
   width:100%;
-  height:100%;
+  height:calc(100% - 40px);
   border:none;
+  display:none;
 }
 </style>
 </head>
@@ -140,21 +163,18 @@ iframe{
   </div>
 </div>
 
-<!-- APP -->
-<div id="app">
+<!-- HOME -->
+<div id="home">
+  <div class="logo">ParaWeb</div>
 
-  <div class="tabs" id="tabs"></div>
-
-  <div class="topbar">
-    <input id="url" placeholder="Search or URL">
-    <button onclick="go()">Go</button>
-    <button onclick="newTab()">+</button>
-    <button onclick="logout()">Logout</button>
+  <div class="search-box">
+    <input id="search" placeholder="Search the web...">
+    <button onclick="search()">Go</button>
   </div>
-
-  <iframe id="frame"></iframe>
-
 </div>
+
+<div class="tabs" id="tabs"></div>
+<iframe id="frame"></iframe>
 
 <!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -163,10 +183,10 @@ iframe{
 <script>
 // 🔴 PASTE YOUR FIREBASE CONFIG HERE
 const firebaseConfig = {
-  apiKey: "PASTE",
-  authDomain: "PASTE",
-  projectId: "PASTE",
-  appId: "PASTE"
+  apiKey: "AIzaSyBUeBIYMaNYbRCPe3caXvDsp9Bjo0B8RJ4",
+  authDomain: "fluppy202020-cyber.github.io",
+  projectId: "parawebsitr",
+  appId: "1:1014721445490:web:559f9c85dac83ef7190ceb"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -179,34 +199,47 @@ function googleLogin(){
 }
 
 function guestLogin(){
-  startApp();
+  start();
 }
 
 auth.onAuthStateChanged(user=>{
-  if(user) startApp();
+  if(user) start();
 });
 
-function startApp(){
+function start(){
   login.style.display="none";
-  app.style.display="block";
+  home.style.display="flex";
 }
 
-// LOGOUT
-function logout(){
-  auth.signOut();
-  location.reload();
-}
-
-// TABS
+// SEARCH + TABS
 let tabs=[];
 let current=0;
 
-function newTab(){
-  tabs.push("https://duckduckgo.com");
-  current=tabs.length-1;
+function search(){
+  let q = searchInput.value.trim();
+  if(!q) return;
+
+  let url = "";
+
+  // smart search detection
+  if(q.startsWith("yt ")){
+    url = "https://www.youtube.com/results?search_query=" + q.replace("yt ","");
+  }
+  else if(q.startsWith("img ")){
+    url = "https://duckduckgo.com/?iax=images&ia=images&q=" + q.replace("img ","");
+  }
+  else if(q.startsWith("git ")){
+    url = "https://github.com/search?q=" + q.replace("git ","");
+  }
+  else{
+    url = "https://duckduckgo.com/?q=" + q;
+  }
+
+  tabs.push(url);
+  current = tabs.length-1;
   renderTabs();
   load();
-}
+  }
 
 function renderTabs(){
   tabsDiv.innerHTML="";
@@ -222,26 +255,20 @@ function switchTab(i){
 
 function load(){
   frame.src=tabs[current];
+  frame.style.display="block";
+  home.style.display="none";
   renderTabs();
 }
 
-// SEARCH
-function go(){
-  let v=url.value.trim();
-  let link = v.startsWith("http") ? v : "https://duckduckgo.com/?q="+v;
-  tabs[current]=link;
-  load();
-}
-
-// ENTER KEY
-url.addEventListener("keydown",e=>{
-  if(e.key==="Enter") go();
+// ENTER
+const searchInput=document.getElementById("search");
+searchInput.addEventListener("keydown",e=>{
+  if(e.key==="Enter") search();
 });
 
 // INIT
 const tabsDiv=document.getElementById("tabs");
 const frame=document.getElementById("frame");
-newTab();
 
 // PARTICLES
 const c=document.getElementById("bg");
@@ -250,7 +277,7 @@ c.width=innerWidth;
 c.height=innerHeight;
 
 let p=[];
-for(let i=0;i<60;i++){
+for(let i=0;i<70;i++){
   p.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:Math.random()-0.5,vy:Math.random()-0.5});
 }
 
