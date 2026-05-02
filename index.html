@@ -1,177 +1,132 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ParaWeb</title>
+/* =========================
+   ADVANCED FEATURES UPGRADE
+========================= */
 
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+// history
+let historyList = JSON.parse(localStorage.getItem("history") || "[]");
 
-<style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Poppins', sans-serif;
+function saveHistory(q){
+  historyList.unshift(q);
+  historyList = historyList.slice(0,10);
+  localStorage.setItem("history", JSON.stringify(historyList));
 }
 
-body {
-  overflow: hidden;
-  background: #0a0a0f;
-  color: white;
+function showHistory(){
+  console.log("Recent:", historyList);
 }
 
-/* Particle canvas */
-#particles {
-  position: fixed;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
+// enter key
+document.getElementById("search").addEventListener("keydown", e=>{
+  if(e.key==="Enter") search();
+});
+
+// loading effect
+function showLoading(){
+  document.body.style.cursor="wait";
+}
+function hideLoading(){
+  document.body.style.cursor="default";
 }
 
-/* Glass UI */
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
+// improved search
+function search(){
+  let q=document.getElementById("search").value;
+  if(!q) return;
+
+  saveHistory(q);
+  showLoading();
+
+  let frame=document.getElementById("frame");
+
+  try{
+    frame.src="https://duckduckgo.com/?q="+q;
+    frame.style.display="block";
+  }catch{
+    alert("Search failed, opening new tab");
+    window.open("https://duckduckgo.com/?q="+q);
+  }
+
+  setTimeout(hideLoading,1000);
 }
 
-.search-box {
-  backdrop-filter: blur(15px);
-  background: rgba(255,255,255,0.05);
-  border-radius: 20px;
-  padding: 20px;
-  width: 60%;
-  text-align: center;
-  box-shadow: 0 0 40px rgba(0,255,255,0.1);
-  animation: float 3s ease-in-out infinite;
+// logout
+function logout(){
+  localStorage.removeItem("logged");
+  location.reload();
 }
 
-@keyframes float {
-  0% { transform: translateY(0px);}
-  50% { transform: translateY(-10px);}
-  100% { transform: translateY(0px);}
+// username display
+let username = localStorage.getItem("user") || "User";
+console.log("Welcome", username);
+
+// session timeout (5 min)
+setTimeout(()=>{
+  logout();
+  alert("Session expired");
+}, 300000);
+
+// bookmarks
+let bookmarks = JSON.parse(localStorage.getItem("bookmarks")||"[]");
+
+function addBookmark(){
+  let url=document.getElementById("frame").src;
+  bookmarks.push(url);
+  localStorage.setItem("bookmarks", JSON.stringify(bookmarks));
+  alert("Bookmarked!");
 }
 
-input {
-  width: 80%;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  background: rgba(255,255,255,0.1);
-  color: white;
+function showBookmarks(){
+  console.log(bookmarks);
 }
 
-button {
-  margin-top: 10px;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 10px;
-  background: cyan;
-  cursor: pointer;
-  transition: 0.3s;
+// new tab toggle
+let newTab=false;
+function toggleNewTab(){
+  newTab=!newTab;
 }
 
-button:hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 20px cyan;
+// updated search behavior
+function search(){
+  let q=document.getElementById("search").value;
+  let url="https://duckduckgo.com/?q="+q;
+
+  if(newTab){
+    window.open(url);
+  } else {
+    document.getElementById("frame").src=url;
+    document.getElementById("frame").style.display="block";
+  }
 }
 
-h1 {
-  margin-bottom: 20px;
-  font-size: 40px;
-  background: linear-gradient(90deg, cyan, purple);
-  -webkit-background-clip: text;
-  color: transparent;
+// UI controls
+function setRadius(v){
+  document.querySelector(".search-box").style.borderRadius = v+"px";
 }
 
-/* floating blobs */
-.blob {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
-  animation: move 10s infinite alternate;
+function setBlur(v){
+  document.querySelector(".search-box").style.backdropFilter = `blur(${v}px)`;
 }
 
-@keyframes move {
-  from { transform: translate(0,0); }
-  to { transform: translate(100px, -100px); }
+function setOpacity(v){
+  document.querySelector(".search-box").style.background = `rgba(255,255,255,${v})`;
 }
 
-.blob1 { width: 200px; height: 200px; background: cyan; top: 10%; left: 10%; }
-.blob2 { width: 300px; height: 300px; background: purple; bottom: 10%; right: 10%; }
-
-</style>
-</head>
-
-<body>
-
-<canvas id="particles"></canvas>
-
-<div class="blob blob1"></div>
-<div class="blob blob2"></div>
-
-<div class="container">
-  <div class="search-box">
-    <h1>ParaWeb</h1>
-    <input id="search" placeholder="Search anything...">
-    <br>
-    <button onclick="search()">Search</button>
-  </div>
-</div>
-
-<script>
-// Simple search redirect (like Google)
-function search() {
-  let query = document.getElementById("search").value;
-  window.location.href = "https://www.google.com/search?q=" + query;
+// animation toggle
+let animations=true;
+function toggleAnimations(){
+  animations=!animations;
+  document.body.style.transition = animations?"all .3s":"none";
 }
 
-// Particle system
-const canvas = document.getElementById("particles");
-const ctx = canvas.getContext("2d");
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-
-let particles = [];
-
-for (let i = 0; i < 100; i++) {
-  particles.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    vx: Math.random() - 0.5,
-    vy: Math.random() - 0.5,
-    size: Math.random() * 2
-  });
+// particles reduce
+function lowPower(){
+  p.length = 10;
 }
 
-function animate() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-
-  particles.forEach(p => {
-    p.x += p.vx;
-    p.y += p.vy;
-
-    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
-    ctx.fillStyle = "cyan";
-    ctx.fill();
-  });
-
-  requestAnimationFrame(animate);
+// direct URL open
+function openURL(){
+  let url=document.getElementById("search").value;
+  if(url.startsWith("http")){
+    window.open(url);
+  }
 }
-
-animate();
-</script>
-
-</body>
-  </html>
